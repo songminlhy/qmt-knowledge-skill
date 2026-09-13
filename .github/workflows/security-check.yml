@@ -1,0 +1,36 @@
+name: QMT Security Regression
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: qmt-security-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  security-regression:
+    name: Security regression gate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout
+        # actions/checkout v7.0.1 — full SHA pin
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Show Python runtime
+        run: python3 --version
+
+      - name: Scanner self-test
+        run: python3 scripts/qmt_semantic_scan.py --self-test
+
+      - name: Security regression gate
+        run: python3 scripts/security_check.py
