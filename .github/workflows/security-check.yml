@@ -1,10 +1,12 @@
 name: QMT Security Regression
 
 on:
+  workflow_dispatch:
   pull_request:
   push:
     branches:
       - main
+      - 'security/**'
 
 permissions:
   contents: read
@@ -28,6 +30,19 @@ jobs:
 
       - name: Show Python runtime
         run: python3 --version
+
+      - name: Debug scanner SHA256
+        run: |
+          python3 -c "
+          import hashlib, json
+          actual = hashlib.sha256(open('scripts/qmt_semantic_scan.py','rb').read()).hexdigest()
+          base = json.load(open('scripts/security-baseline.json'))['scanner_sha256']
+          print(f'Scanner SHA256 (actual):   {actual}')
+          print(f'Scanner SHA256 (baseline): {base}')
+          print(f'Match: {actual == base}')
+          import subprocess
+          subprocess.run(['xxd','-l','80','scripts/qmt_semantic_scan.py'])
+          "
 
       - name: Scanner self-test
         run: python3 scripts/qmt_semantic_scan.py --self-test

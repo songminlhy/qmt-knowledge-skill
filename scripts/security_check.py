@@ -51,9 +51,14 @@ def baseline_path(root):
 
 
 def sha256_file(path):
-    return hashlib.sha256(
-        path.read_bytes()
-    ).hexdigest()
+    # Normalize line endings to LF so hash is identical
+    # on Windows (CRLF checkout) and Linux (LF checkout).
+    raw = path.read_bytes()
+    normalized = (
+        raw.replace(b"\r\n", b"\n")
+        .replace(b"\r", b"\n")
+    )
+    return hashlib.sha256(normalized).hexdigest()
 
 
 def git_head(root):
